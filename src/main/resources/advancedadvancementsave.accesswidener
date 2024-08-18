@@ -5,3 +5,5 @@ accessible field net/minecraft/world/PersistentStateManager registryLookup Lnet/
 accessible method net/minecraft/world/PersistentStateManager getFile (Ljava/lang/String;)Ljava/io/File;
 accessible class net/minecraft/advancement/PlayerAdvancementTracker$ProgressMap
 accessible field net/minecraft/advancement/PlayerAdvancementTracker owner Lnet/minecraft/server/network/ServerPlayerEntity;
+accessible method net/minecraft/stat/ServerStatHandler asString ()Ljava/lang/String;
+accessible field net/minecraft/stat/ServerStatHandler file Ljava/io/File;

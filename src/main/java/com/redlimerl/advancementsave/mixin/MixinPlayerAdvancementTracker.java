@@ -29,9 +29,9 @@ public abstract class MixinPlayerAdvancementTracker {
 
     @Inject(method = "onStatusUpdate", at = @At("RETURN"))
     public void onUpdateStatus(CallbackInfo ci) {
-        JsonElement jsonElement = this.progressMapCodec.encodeStart(JsonOps.INSTANCE, this.createProgressMap()).getOrThrow();
-        AdvancedAdvancementSave.UPDATED_PLAYER_MAP.put(this.owner.getUuid(), () -> {
-            AdvancedAdvancementSave.UPDATING_SETS.add(this.owner.getUuidAsString());
+        final JsonElement jsonElement = this.progressMapCodec.encodeStart(JsonOps.INSTANCE, this.createProgressMap()).getOrThrow();
+        AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.put(this.owner.getUuid(), () -> {
+            AdvancedAdvancementSave.UPDATING_SETS.add("ad-" + this.owner.getUuidAsString());
             try {
                 PathUtil.createDirectories(this.filePath.getParent());
                 Writer writer = Files.newBufferedWriter(this.filePath, StandardCharsets.UTF_8);
@@ -50,7 +50,7 @@ public abstract class MixinPlayerAdvancementTracker {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            AdvancedAdvancementSave.UPDATING_SETS.remove(this.owner.getUuidAsString());
+            AdvancedAdvancementSave.UPDATING_SETS.remove("ad-" + this.owner.getUuidAsString());
         });
     }
 }

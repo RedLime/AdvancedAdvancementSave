@@ -13,7 +13,8 @@ import java.util.concurrent.Executors;
 
 public class AdvancedAdvancementSave {
     public static final Set<String> UPDATING_SETS = Sets.newConcurrentHashSet();
-    public static final Map<UUID, Runnable> UPDATED_PLAYER_MAP = Maps.newConcurrentMap();
-    public static final ExecutorService THREAD_EXECUTOR = Executors.newFixedThreadPool(4);
+    public static final Map<UUID, Runnable> UPDATED_ADVANCEMENT_PLAYER_MAP = Maps.newConcurrentMap();
+    public static final Map<UUID, Runnable> UPDATED_STAT_PLAYER_MAP = Maps.newConcurrentMap();
+    public static final ExecutorService THREAD_EXECUTOR = Executors.newFixedThreadPool(6);
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 }
