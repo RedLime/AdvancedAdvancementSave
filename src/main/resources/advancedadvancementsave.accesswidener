@@ -4,3 +4,4 @@ accessible field net/minecraft/command/DataCommandStorage stateManager Lnet/mine
 accessible field net/minecraft/world/PersistentStateManager registryLookup Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;
 accessible method net/minecraft/world/PersistentStateManager getFile (Ljava/lang/String;)Ljava/io/File;
 accessible class net/minecraft/advancement/PlayerAdvancementTracker$ProgressMap
+accessible field net/minecraft/advancement/PlayerAdvancementTracker owner Lnet/minecraft/server/network/ServerPlayerEntity;

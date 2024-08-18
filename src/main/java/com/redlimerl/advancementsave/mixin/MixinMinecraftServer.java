@@ -48,11 +48,13 @@ public abstract class MixinMinecraftServer {
                 NbtHelper.putDataVersion(nbtCompound);
 
                 AdvancedAdvancementSave.THREAD_EXECUTOR.submit(() -> {
+                    AdvancedAdvancementSave.UPDATING_SETS.add("scoreboard");
                     try {
                         NbtIo.writeCompressed(nbtCompound, stateManager.getFile("scoreboard").toPath());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    AdvancedAdvancementSave.UPDATING_SETS.remove("scoreboard");
                 });
             }
         }
