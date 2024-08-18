@@ -55,6 +55,7 @@ public abstract class MixinMinecraftServer {
             for (ServerPlayerEntity serverPlayer : this.getPlayerManager().getPlayerList()) {
                 this.pushPlayerStatUpdate(serverPlayer);
             }
+            shouldUpdateScoreboard = true;
         }
 
         if (!AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.isEmpty()) {
