@@ -73,13 +73,13 @@ public abstract class MixinMinecraftServer {
             ScoreboardState scoreboardState = stateManager.getOrCreate(this.getScoreboard().getPersistentStateType(), "scoreboard");
 
             NbtCompound nbtCompound = new NbtCompound();
-            nbtCompound.put("data", scoreboardState.writeNbt(new NbtCompound(), stateManager.registryLookup));
+            nbtCompound.put("data", scoreboardState.writeNbt(new NbtCompound(), stateManager.registries));
             NbtHelper.putDataVersion(nbtCompound);
 
             AdvancedAdvancementSave.THREAD_EXECUTOR.submit(() -> {
                 AdvancedAdvancementSave.UPDATING_SETS.add("scoreboard");
                 try {
-                    NbtIo.writeCompressed(nbtCompound, stateManager.getFile("scoreboard").toPath());
+                    NbtIo.writeCompressed(nbtCompound, stateManager.getFile("scoreboard"));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
