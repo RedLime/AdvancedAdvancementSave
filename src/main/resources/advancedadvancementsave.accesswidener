@@ -7,3 +7,4 @@ accessible class net/minecraft/advancement/PlayerAdvancementTracker$ProgressMap
 accessible field net/minecraft/advancement/PlayerAdvancementTracker owner Lnet/minecraft/server/network/ServerPlayerEntity;
 accessible method net/minecraft/stat/ServerStatHandler asString ()Ljava/lang/String;
 accessible field net/minecraft/stat/ServerStatHandler file Ljava/io/File;
+accessible method net/minecraft/world/PersistentStateManager encode (Lnet/minecraft/world/PersistentStateType;Lnet/minecraft/world/PersistentState;Lnet/minecraft/registry/RegistryOps;)Lnet/minecraft/nbt/NbtCompound;

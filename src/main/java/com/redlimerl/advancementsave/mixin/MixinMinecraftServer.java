@@ -5,11 +5,13 @@ import net.minecraft.command.DataCommandStorage;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.scoreboard.ScoreboardState;
 import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.asm.mixin.Mixin;
@@ -70,16 +72,14 @@ public abstract class MixinMinecraftServer {
 
         if (shouldUpdateScoreboard) {
             PersistentStateManager stateManager = this.getDataCommandStorage().stateManager;
-            ScoreboardState scoreboardState = stateManager.getOrCreate(this.getScoreboard().getPersistentStateType(), "scoreboard");
+            ScoreboardState scoreboardState = stateManager.getOrCreate(ServerScoreboard.STATE_TYPE);
 
-            NbtCompound nbtCompound = new NbtCompound();
-            nbtCompound.put("data", scoreboardState.writeNbt(new NbtCompound(), stateManager.registries));
-            NbtHelper.putDataVersion(nbtCompound);
+            NbtCompound nbtCompound = stateManager.encode(ServerScoreboard.STATE_TYPE, scoreboardState, stateManager.registries.getOps(NbtOps.INSTANCE));
 
             AdvancedAdvancementSave.THREAD_EXECUTOR.submit(() -> {
                 AdvancedAdvancementSave.UPDATING_SETS.add("scoreboard");
                 try {
-                    NbtIo.writeCompressed(nbtCompound, stateManager.getFile("scoreboard"));
+                    NbtIo.writeCompressed(nbtCompound, stateManager.getFile(ServerScoreboard.STATE_TYPE.id()));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

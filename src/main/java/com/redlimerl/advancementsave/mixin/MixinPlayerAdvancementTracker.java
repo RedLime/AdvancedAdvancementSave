@@ -6,7 +6,7 @@ import com.mojang.serialization.JsonOps;
 import com.redlimerl.advancementsave.AdvancedAdvancementSave;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.PathUtil;
+import net.minecraft.util.path.PathUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
