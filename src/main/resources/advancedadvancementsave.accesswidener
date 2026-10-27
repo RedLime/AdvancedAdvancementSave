@@ -1,10 +1,8 @@
-accessWidener v2 named
-accessible method net/minecraft/server/PlayerManager savePlayerData (Lnet/minecraft/server/network/ServerPlayerEntity;)V
-accessible field net/minecraft/command/DataCommandStorage stateManager Lnet/minecraft/world/PersistentStateManager;
-accessible field net/minecraft/world/PersistentStateManager registries Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;
-accessible method net/minecraft/world/PersistentStateManager getFile (Ljava/lang/String;)Ljava/nio/file/Path;
-accessible class net/minecraft/advancement/PlayerAdvancementTracker$ProgressMap
-accessible field net/minecraft/advancement/PlayerAdvancementTracker owner Lnet/minecraft/server/network/ServerPlayerEntity;
-accessible method net/minecraft/stat/ServerStatHandler asString ()Ljava/lang/String;
-accessible field net/minecraft/stat/ServerStatHandler file Ljava/io/File;
-accessible method net/minecraft/world/PersistentStateManager encode (Lnet/minecraft/world/PersistentStateType;Lnet/minecraft/world/PersistentState;Lnet/minecraft/registry/RegistryOps;)Lnet/minecraft/nbt/NbtCompound;
+accessWidener v2 official
+accessible field net/minecraft/world/level/storage/SavedDataStorage registries Lnet/minecraft/core/HolderLookup$Provider;
+accessible method net/minecraft/world/level/storage/SavedDataStorage getDataFile (Lnet/minecraft/resources/Identifier;)Ljava/nio/file/Path;
+accessible method net/minecraft/world/level/storage/SavedDataStorage encodeUnchecked (Lnet/minecraft/world/level/saveddata/SavedDataType;Lnet/minecraft/world/level/saveddata/SavedData;Lnet/minecraft/resources/RegistryOps;)Lnet/minecraft/nbt/CompoundTag;
+accessible class net/minecraft/server/PlayerAdvancements$Data
+accessible field net/minecraft/server/PlayerAdvancements player Lnet/minecraft/server/level/ServerPlayer;
+accessible method net/minecraft/stats/ServerStatsCounter toJson ()Lcom/google/gson/JsonElement;
+accessible field net/minecraft/stats/ServerStatsCounter file Ljava/nio/file/Path;
