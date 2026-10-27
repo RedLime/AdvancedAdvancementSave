@@ -4,9 +4,9 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.redlimerl.advancementsave.AdvancedAdvancementSave;
-import net.minecraft.advancement.PlayerAdvancementTracker;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.path.PathUtil;
+import net.minecraft.server.PlayerAdvancements;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.FileUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,22 +19,22 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Mixin(PlayerAdvancementTracker.class)
+@Mixin(PlayerAdvancements.class)
 public abstract class MixinPlayerAdvancementTracker {
 
-    @Shadow public ServerPlayerEntity owner;
-    @Final @Shadow private Codec<PlayerAdvancementTracker.ProgressMap> progressMapCodec;
-    @Final @Shadow private Path filePath;
-    @Shadow protected abstract PlayerAdvancementTracker.ProgressMap createProgressMap();
+    @Shadow public ServerPlayer player;
+    @Final @Shadow private Codec<PlayerAdvancements.Data> codec;
+    @Final @Shadow private Path playerSavePath;
+    @Shadow protected abstract PlayerAdvancements.Data asData();
 
-    @Inject(method = "onStatusUpdate", at = @At("RETURN"))
+    @Inject(method = "markForVisibilityUpdate", at = @At("RETURN"))
     public void onUpdateStatus(CallbackInfo ci) {
-        final JsonElement jsonElement = this.progressMapCodec.encodeStart(JsonOps.INSTANCE, this.createProgressMap()).getOrThrow();
-        AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.put(this.owner.getUuid(), () -> {
-            AdvancedAdvancementSave.UPDATING_SETS.add("ad-" + this.owner.getUuidAsString());
+        final JsonElement jsonElement = this.codec.encodeStart(JsonOps.INSTANCE, this.asData()).getOrThrow();
+        AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.put(this.player.getUUID(), () -> {
+            AdvancedAdvancementSave.UPDATING_SETS.add("ad-" + this.player.getStringUUID());
             try {
-                PathUtil.createDirectories(this.filePath.getParent());
-                Writer writer = Files.newBufferedWriter(this.filePath, StandardCharsets.UTF_8);
+                FileUtil.createDirectoriesSafe(this.playerSavePath.getParent());
+                Writer writer = Files.newBufferedWriter(this.playerSavePath, StandardCharsets.UTF_8);
                 try {
                     AdvancedAdvancementSave.GSON.toJson(jsonElement, AdvancedAdvancementSave.GSON.newJsonWriter(writer));
                 } catch (Throwable var6) {
@@ -50,7 +50,7 @@ public abstract class MixinPlayerAdvancementTracker {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            AdvancedAdvancementSave.UPDATING_SETS.remove("ad-" + this.owner.getUuidAsString());
+            AdvancedAdvancementSave.UPDATING_SETS.remove("ad-" + this.player.getStringUUID());
         });
     }
 }

@@ -1,18 +1,15 @@
 package com.redlimerl.advancementsave.mixin;
 
 import com.redlimerl.advancementsave.AdvancedAdvancementSave;
-import net.minecraft.command.DataCommandStorage;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.scoreboard.ScoreboardState;
-import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.level.storage.SavedDataStorage;
+import net.minecraft.world.scores.ScoreboardSaveData;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,18 +30,18 @@ public abstract class MixinMinecraftServer {
 
     @Shadow public abstract ServerScoreboard getScoreboard();
 
-    @Shadow public abstract PlayerManager getPlayerManager();
+    @Shadow public abstract PlayerList getPlayerList();
 
-    @Shadow public abstract DataCommandStorage getDataCommandStorage();
+    @Shadow public abstract SavedDataStorage getDataStorage();
 
-    @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At("RETURN"))
+    @Inject(method = "tickServer(Ljava/util/function/BooleanSupplier;)V", at = @At("RETURN"))
     public void onTick(CallbackInfo ci) {
         boolean shouldUpdateScoreboard = false;
         if (!AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.isEmpty()) {
-            for (ServerPlayerEntity serverPlayer : this.getPlayerManager().getPlayerList()) {
-                if (AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.containsKey(serverPlayer.getUuid())) {
-                    AdvancedAdvancementSave.THREAD_EXECUTOR.submit(AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.get(serverPlayer.getUuid()));
-                    AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.remove(serverPlayer.getUuid());
+            for (ServerPlayer serverPlayer : this.getPlayerList().getPlayers()) {
+                if (AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.containsKey(serverPlayer.getUUID())) {
+                    AdvancedAdvancementSave.THREAD_EXECUTOR.submit(AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.get(serverPlayer.getUUID()));
+                    AdvancedAdvancementSave.UPDATED_ADVANCEMENT_PLAYER_MAP.remove(serverPlayer.getUUID());
                     this.pushPlayerStatUpdate(serverPlayer);
                     shouldUpdateScoreboard = true;
                 }
@@ -54,32 +51,33 @@ public abstract class MixinMinecraftServer {
         if (this.statUpdateTick++ >= 20 * 60) {
             this.statUpdateTick = 0;
 
-            for (ServerPlayerEntity serverPlayer : this.getPlayerManager().getPlayerList()) {
+            for (ServerPlayer serverPlayer : this.getPlayerList().getPlayers()) {
                 this.pushPlayerStatUpdate(serverPlayer);
             }
             shouldUpdateScoreboard = true;
         }
 
         if (!AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.isEmpty()) {
-            for (ServerPlayerEntity serverPlayer : this.getPlayerManager().getPlayerList()) {
-                if (AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.containsKey(serverPlayer.getUuid())) {
-                    AdvancedAdvancementSave.THREAD_EXECUTOR.submit(AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.get(serverPlayer.getUuid()));
-                    AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.remove(serverPlayer.getUuid());
+            for (ServerPlayer serverPlayer : this.getPlayerList().getPlayers()) {
+                if (AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.containsKey(serverPlayer.getUUID())) {
+                    AdvancedAdvancementSave.THREAD_EXECUTOR.submit(AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.get(serverPlayer.getUUID()));
+                    AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.remove(serverPlayer.getUUID());
                     shouldUpdateScoreboard = true;
                 }
             }
         }
 
         if (shouldUpdateScoreboard) {
-            PersistentStateManager stateManager = this.getDataCommandStorage().stateManager;
-            ScoreboardState scoreboardState = stateManager.getOrCreate(ServerScoreboard.STATE_TYPE);
+            SavedDataStorage stateManager = this.getDataStorage();
+            ScoreboardSaveData scoreboardState = stateManager.computeIfAbsent(ScoreboardSaveData.TYPE);
+            this.getScoreboard().storeToSaveDataIfDirty(scoreboardState);
 
-            NbtCompound nbtCompound = stateManager.encode(ServerScoreboard.STATE_TYPE, scoreboardState, stateManager.registries.getOps(NbtOps.INSTANCE));
+            CompoundTag nbtCompound = stateManager.encodeUnchecked(ScoreboardSaveData.TYPE, scoreboardState, stateManager.registries.createSerializationContext(NbtOps.INSTANCE));
 
             AdvancedAdvancementSave.THREAD_EXECUTOR.submit(() -> {
                 AdvancedAdvancementSave.UPDATING_SETS.add("scoreboard");
                 try {
-                    NbtIo.writeCompressed(nbtCompound, stateManager.getFile(ServerScoreboard.STATE_TYPE.id()));
+                    NbtIo.writeCompressed(nbtCompound, stateManager.getDataFile(ScoreboardSaveData.TYPE.id()));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -89,16 +87,16 @@ public abstract class MixinMinecraftServer {
     }
 
     @Unique
-    private void pushPlayerStatUpdate(final ServerPlayerEntity player) {
-        final String statData = player.getStatHandler().asString();
-        AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.put(player.getUuid(), () -> {
-            AdvancedAdvancementSave.UPDATING_SETS.add("st-" + player.getUuidAsString());
+    private void pushPlayerStatUpdate(final ServerPlayer player) {
+        final String statData = AdvancedAdvancementSave.GSON.toJson(player.getStats().toJson());
+        AdvancedAdvancementSave.UPDATED_STAT_PLAYER_MAP.put(player.getUUID(), () -> {
+            AdvancedAdvancementSave.UPDATING_SETS.add("st-" + player.getStringUUID());
             try {
-                FileUtils.writeStringToFile(player.getStatHandler().file, statData, Charset.defaultCharset());
+                FileUtils.writeStringToFile(player.getStats().file.toFile(), statData, Charset.defaultCharset());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            AdvancedAdvancementSave.UPDATING_SETS.remove("st-" + player.getUuidAsString());
+            AdvancedAdvancementSave.UPDATING_SETS.remove("st-" + player.getStringUUID());
         });
     }
 }
